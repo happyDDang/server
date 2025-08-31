@@ -6,6 +6,14 @@ import {SERVER_PORT} from "./config/constants.ts";
 import {logger} from "./utils/logger.ts";
 import {withLogging, createLogContext} from "./utils/middleware.ts";
 
+type RouteHandler = (req: Request) => Promise<Response>;
+
+const routes = new Map<string, RouteHandler>([
+  ["POST:/member", handleCheckNickname],
+  ["POST:/rank", handleRegisterRanking],
+  ["GET:/rank", handleFetchRankings],
+]);
+
 async function handler(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
     return handleCorsPreflightRequest(req);
@@ -14,18 +22,13 @@ async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname;
   const logContext = createLogContext(req);
+  const routeKey = `${req.method}:${path}`;
 
   try {
-    if (path === "/member" && req.method === "POST") {
-      return await handleCheckNickname(req);
-    }
-
-    if (path === "/rank" && req.method === "POST") {
-      return await handleRegisterRanking(req);
-    }
-
-    if (path === "/rank" && req.method === "GET") {
-      return await handleFetchRankings(req);
+    const routeHandler = routes.get(routeKey);
+    
+    if (routeHandler) {
+      return await routeHandler(req);
     }
 
     logger.warn("API endpoint not found", {
