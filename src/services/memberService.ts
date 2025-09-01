@@ -1,7 +1,6 @@
 import {MEMBER_NO_RANGE} from "../config/constants.ts";
 import {logger} from "../utils/logger.ts";
-
-const kv = await Deno.openKv();
+import {getKvInstance} from "../utils/kv.ts";
 
 export async function checkNicknameDuplicate(nickname: string) {
   const trimmedNickname = nickname?.trim();
@@ -12,6 +11,7 @@ export async function checkNicknameDuplicate(nickname: string) {
   }
 
   try {
+    const kv = await getKvInstance();
     logger.logDatabaseOperation("get", "players", {nickname: trimmedNickname});
     const existing = await kv.get(["players", trimmedNickname]);
 

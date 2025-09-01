@@ -1,8 +1,7 @@
 import type {Player} from "../models/index.ts";
 import {DEFAULT_TOP_RANK_SIZE} from "../config/constants.ts";
 import {logger} from "../utils/logger.ts";
-
-const kv = await Deno.openKv();
+import {getKvInstance} from "../utils/kv.ts";
 
 export async function registerPlayerRanking(
   member_no: number,
@@ -21,6 +20,7 @@ export async function registerPlayerRanking(
   }
 
   try {
+    const kv = await getKvInstance();
     logger.logDatabaseOperation("get", "players", {nickname: trimmedNickname});
     const existing = await kv.get(["players", trimmedNickname]);
     if (existing.value) {
@@ -74,6 +74,7 @@ export async function fetchRankings(memberNo?: string, topRankSize?: number) {
   const rankSize = topRankSize || DEFAULT_TOP_RANK_SIZE;
 
   try {
+    const kv = await getKvInstance();
     logger.logDatabaseOperation("list", "rankings", { 
       limit: rankSize,
       memberNo: memberNo || "all" 
