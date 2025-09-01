@@ -1,7 +1,7 @@
 export const ALLOWED_ORIGINS = [
-  "http://localhost:3000", // 로컬 개발환경
   "http://localhost:8080", // 로컬 개발환경
-  "https://happy-ddang.vercel.app", // 배포 환경
+  "https://happyddang-client.vercel.app/", // 배포 환경
+  "https://happyddang-client.vercel.app", // 배포 환경
 ];
 
 export const SERVER_PORT = 8000;
