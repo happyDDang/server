@@ -16,9 +16,9 @@ export async function getKvInstance(): Promise<Deno.Kv> {
       logger.info("Using Deno Deploy project KV (production)", { url: projectKvUrl });
       
       // 액세스 토큰 필요한지 확인
-      const accessToken = Deno.env.get("DENO_KV_ACCESS_TOKEN");
+      const accessToken = Deno.env.get("KV_ACCESS_TOKEN");
       if (!accessToken) {
-        logger.warn("DENO_KV_ACCESS_TOKEN not found, trying without token");
+        logger.warn("KV_ACCESS_TOKEN not found, trying without token");
       }
       
       kvInstance = await Deno.openKv(projectKvUrl);
