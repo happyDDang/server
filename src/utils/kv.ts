@@ -11,9 +11,9 @@ export async function getKvInstance(): Promise<Deno.Kv> {
     const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
     
     if (isProduction) {
-      const remoteKvUrl = "https://api.deno.com/databases/b41eba3f-d1e9-46ab-8df7-e307727b9e28/connect";
-      logger.info("Connecting to remote KV database (production)");
-      kvInstance = await Deno.openKv(remoteKvUrl);
+      // Deno Deploy 내장 KV 사용 (별도 URL 불필요)
+      logger.info("Using Deno Deploy integrated KV (production)");
+      kvInstance = await Deno.openKv();
     } else {
       logger.info("Using local KV database (development mode)");
       kvInstance = await Deno.openKv();
