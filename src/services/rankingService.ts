@@ -46,11 +46,28 @@ export async function registerPlayerRanking(
       score: player.score,
     });
 
+    logger.info("Attempting to save player data to KV", {
+      nickname: player.nickname,
+      member_no: player.member_no,
+      score: player.score
+    });
+
     await kv.set(["players", player.nickname], player);
+    logger.debug("Saved to players key", { nickname: player.nickname });
+    
     await kv.set(["members", player.member_no], player);
+    logger.debug("Saved to members key", { member_no: player.member_no });
 
     const sortKey = [-player.score, player.timestamp];
     await kv.set(["rankings", ...sortKey], player);
+    logger.debug("Saved to rankings key", { sortKey });
+
+    // 저장 확인
+    const verifyPlayer = await kv.get(["players", player.nickname]);
+    logger.info("KV save verification", { 
+      saved: !!verifyPlayer.value,
+      data: verifyPlayer.value
+    });
 
     logger.logBusinessEvent("player_ranking_registered", {
       member_no: player.member_no,

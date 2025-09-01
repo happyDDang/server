@@ -19,7 +19,21 @@ export async function getKvInstance(): Promise<Deno.Kv> {
       kvInstance = await Deno.openKv();
     }
 
-    logger.info("KV database connection established successfully");
+    logger.info("KV database connection established successfully", {
+      isProduction,
+      kvType: isProduction ? "Deno Deploy KV" : "Local KV"
+    });
+    
+    // KV 연결 테스트
+    try {
+      await kvInstance.set(["test"], "connection_ok");
+      const testResult = await kvInstance.get(["test"]);
+      await kvInstance.delete(["test"]);
+      logger.info("KV connection test successful", { testValue: testResult.value });
+    } catch (testError) {
+      logger.error("KV connection test failed", testError as Error);
+    }
+    
     return kvInstance;
   } catch (error) {
     const err = error as Error;
