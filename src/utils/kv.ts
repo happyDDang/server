@@ -37,7 +37,17 @@ export async function getKvInstance(): Promise<Deno.Kv> {
         );
       }
 
-      kvInstance = await Deno.openKv(projectKvUrl);
+      try {
+        kvInstance = await Deno.openKv(projectKvUrl);
+        logger.info("Successfully connected to project KV");
+      } catch (kvError) {
+        logger.error("Failed to connect to project KV", kvError as Error, {
+          url: projectKvUrl,
+          hasToken: !!kvToken,
+          token: kvToken,
+        });
+        throw kvError;
+      }
     } else {
       logger.info("Using local KV database (development mode)");
       kvInstance = await Deno.openKv();
