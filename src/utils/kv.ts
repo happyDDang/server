@@ -14,23 +14,29 @@ export async function getKvInstance(): Promise<Deno.Kv> {
       // 원격 KV 데이터베이스 직접 연결 시도
       const databaseId = "b41eba3f-d1e9-46ab-8df7-e307727b9e28";
       const kvUrl = `https://api.deno.com/databases/${databaseId}/connect`;
-      
-      logger.info("Attempting to connect to remote KV database", { databaseId });
-      
+
+      logger.info("Attempting to connect to remote KV database", {databaseId});
+
+      // 런타임에 DENO_KV_ACCESS_TOKEN 설정 시도
+      const customToken =
+        Deno.env.get("KV_ACCESS_TOKEN") ||
+        Deno.env.get("APP_KV_TOKEN") ||
+        "ddp_ZlHHRUMfcUmykrQ5W9RtCElxlOKrE62se0xj"; // 하드코딩된 토큰
+
+      if (customToken) {
+        Deno.env.set("DENO_KV_ACCESS_TOKEN", customToken);
+        logger.info("DENO_KV_ACCESS_TOKEN set programmatically");
+      }
+
       try {
         kvInstance = await Deno.openKv(kvUrl);
         logger.info("Successfully connected to remote KV database");
       } catch (kvError) {
-        logger.error("Failed to connect to remote KV, falling back to built-in KV", kvError as Error);
-        
-        // 실패시 내장 KV로 폴백
-        try {
-          kvInstance = await Deno.openKv();
-          logger.info("Successfully connected to Deno Deploy built-in KV (fallback)");
-        } catch (fallbackError) {
-          logger.error("Failed to connect to built-in KV as well", fallbackError as Error);
-          throw fallbackError;
-        }
+        logger.error(
+          "Failed to connect to remote KV database",
+          kvError as Error
+        );
+        throw kvError;
       }
     } else {
       logger.info("Using local KV database (development mode)");
