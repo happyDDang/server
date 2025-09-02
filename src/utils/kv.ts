@@ -11,42 +11,26 @@ export async function getKvInstance(): Promise<Deno.Kv> {
     const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
 
     if (isProduction) {
-      // 프로젝트별 KV URL 사용 (대시보드에 보이는 데이터와 동일)
-      const projectKvUrl =
-        "https://api.deno.com/databases/b41eba3f-d1e9-46ab-8df7-e307727b9e28/connect";
-      logger.info("Using Deno Deploy project KV (production)", {
-        url: projectKvUrl,
-      });
-
-      const kvToken =
-        Deno.env.get("KV_ACCESS_TOKEN") ||
-        Deno.env.get("DENO_KV_ACCESS_TOKEN") ||
-        Deno.env.get("APP_KV_ACCESS_TOKEN");
-
-      if (!kvToken) {
-        logger.error(
-          "KV Access Token not found",
-          new Error("Missing KV access token"),
-          {
-            checkedVariables: [
-              "KV_ACCESS_TOKEN",
-              "DENO_KV_ACCESS_TOKEN",
-              "APP_KV_ACCESS_TOKEN",
-            ],
-          }
-        );
-      }
-
+      // 원격 KV 데이터베이스 직접 연결 시도
+      const databaseId = "b41eba3f-d1e9-46ab-8df7-e307727b9e28";
+      const kvUrl = `https://api.deno.com/databases/${databaseId}/connect`;
+      
+      logger.info("Attempting to connect to remote KV database", { databaseId });
+      
       try {
-        kvInstance = await Deno.openKv(projectKvUrl);
-        logger.info("Successfully connected to project KV");
+        kvInstance = await Deno.openKv(kvUrl);
+        logger.info("Successfully connected to remote KV database");
       } catch (kvError) {
-        logger.error("Failed to connect to project KV", kvError as Error, {
-          url: projectKvUrl,
-          hasToken: !!kvToken,
-          token: kvToken,
-        });
-        throw kvError;
+        logger.error("Failed to connect to remote KV, falling back to built-in KV", kvError as Error);
+        
+        // 실패시 내장 KV로 폴백
+        try {
+          kvInstance = await Deno.openKv();
+          logger.info("Successfully connected to Deno Deploy built-in KV (fallback)");
+        } catch (fallbackError) {
+          logger.error("Failed to connect to built-in KV as well", fallbackError as Error);
+          throw fallbackError;
+        }
       }
     } else {
       logger.info("Using local KV database (development mode)");
