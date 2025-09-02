@@ -2,14 +2,14 @@ import {ALLOWED_ORIGINS} from "../config/constants.ts";
 import { logger } from "./logger.ts";
 
 export function getCorsHeaders(origin: string | null) {
-  const allowedOrigin =
-    origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  // Origin이 허용 목록에 있으면 그대로 사용, 없으면 와일드카드
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : "*";
 
   if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-    logger.warn("CORS request from non-allowed origin", {
+    logger.warn("CORS request from non-allowed origin, allowing with wildcard", {
       requestedOrigin: origin,
       allowedOrigins: ALLOWED_ORIGINS,
-      fallbackOrigin: allowedOrigin,
+      usingWildcard: true,
     });
   }
 
